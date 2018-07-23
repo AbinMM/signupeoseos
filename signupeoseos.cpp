@@ -44,6 +44,10 @@ void signupeoseos::transfer(account_name from, account_name to, asset quantity, 
     array<unsigned char,33> pubkey_data;
     copy_n(vch.begin(), 33, pubkey_data.begin());
 
+    checksum160 check_pubkey;
+    ripemd160(reinterpret_cast<char *>(pubkey_data.data()), 33, &check_pubkey);
+    eosio_assert(memcmp(&check_pubkey.hash, &vch.end()[-4], 4) == 0, "invalid public key");
+
     asset stake_net(1000, CORE_SYMBOL);
     asset stake_cpu(1000, CORE_SYMBOL);
     asset buy_ram = quantity - stake_net - stake_cpu;
