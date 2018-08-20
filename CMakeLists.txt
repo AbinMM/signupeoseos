@@ -13,14 +13,20 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${EOSIO_WASMSDK_ROOT}/lib/cmake)
 include(EosioWasmToolchain)
 
-add_executable(signupeoseos.wasm signupeoseos.hpp signupeoseos.cpp)
+add_executable(${CMAKE_PROJECT_NAME}.wasm ${CMAKE_PROJECT_NAME}.hpp ${CMAKE_PROJECT_NAME}.cpp)
 
-set(EOSIO_INSTALL_DIR /usr/local/eosio)
-set(EOSIOCPP ${EOSIO_INSTALL_DIR}/bin/eosiocpp)
-set(CONTRACT_ABI_FILE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_PROJECT_NAME}.abi)
-set(CONTRACT_HPP_FILE ${CMAKE_CURRENT_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.hpp)
-add_custom_target(signupeoseos.abi ALL)
+if(EOSIO_ROOT STREQUAL "" OR NOT EOSIO_ROOT)
+   set(EOSIO_ROOT "/usr/local/eosio")
+endif()
+
+set(EOSIOCPP ${EOSIO_ROOT}/bin/eosiocpp)
+
+file(GLOB CONTRACT_HPP_FILE ${CMAKE_PROJECT_NAME}.hpp)
+add_custom_target(abi DEPENDS ${CMAKE_PROJECT_NAME}.abi)
 add_custom_command(
-    TARGET signupeoseos.abi
-    COMMAND ${EOSIOCPP} -g ${CONTRACT_ABI_FILE} ${CONTRACT_HPP_FILE}
-)
+	OUTPUT ${CMAKE_PROJECT_NAME}.abi
+	COMMAND ${EOSIOCPP} -g ${CMAKE_PROJECT_NAME}.abi ${CONTRACT_HPP_FILE}
+	DEPENDS ${CMAKE_PROJECT_NAME}.hpp
+	)
+
+include(UnitTestsExternalProject.txt)

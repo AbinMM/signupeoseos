@@ -1,0 +1,5 @@
+#pragma once
+#include <eosio/testing/tester.hpp>
+
+static std::vector<uint8_t> signupeoseos_wasm() { return read_wasm("${CMAKE_BINARY_DIR}/../signupeoseos.wasm"); }
+static std::vector<char>    signupeoseos_abi() { return read_abi("${CMAKE_BINARY_DIR}/../signupeoseos.abi"); }

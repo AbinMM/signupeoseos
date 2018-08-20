@@ -8,15 +8,43 @@
 #include <eosiolib/action.hpp>
 #include <eosiolib/symbol.hpp>
 #include <eosiolib/crypto.h>
+#include <eosiolib/transaction.hpp>
+#include <eosiolib/singleton.hpp>
 #include <cstring>
+
 using namespace eosio;
 using namespace std;
 
+#define DEFAULT_FEE 2000
+#define DEFAULT_LEVEL 3
+
 class signupeoseos: public contract {
 public:
-    signupeoseos(account_name self): contract(self){};
+    signupeoseos(account_name self): contract(self), sgt_feeconfig(_self, _self), referrers(_self, _self) {};
     void transfer(account_name from, account_name to, asset quantity, string memo);
+    /// @abi action
+    void delegate(account_name new_account_name, string vch);
+    /// @abi action
+    void config(uint64_t level, asset fee);
 private:
+    // @abi table feeconfig i64
+    struct st_feeconfig {
+        uint64_t maxlevel=DEFAULT_LEVEL; // need uint64 to use singleton
+        asset fee=asset(DEFAULT_FEE, CORE_SYMBOL);
+    };
+    typedef singleton<N(feeconfig), st_feeconfig> tb_feeconfig;
+    tb_feeconfig sgt_feeconfig;
+    st_feeconfig get_config();
+
+    // @abi table referrers i64
+    struct st_referer {
+        account_name user;
+        account_name referrer;
+        uint64_t primary_key() const { return user; }
+        EOSLIB_SERIALIZE(st_referer  , (user)(referrer))
+    };
+    multi_index< N(referrers), st_referer > referrers;
+
     struct signup_public_key {
         uint8_t        type;
         array<unsigned char,33> data;
@@ -45,6 +73,8 @@ private:
         authority owner;
         authority active;
     };
+
+    void distribute_fee(asset total_fee, account_name paying_account, uint64_t level=DEFAULT_LEVEL);
 };
 
 #define EOSIO_ABI_EX( TYPE, MEMBERS ) \
@@ -55,7 +85,7 @@ extern "C" { \
             /* onerror is only valid if it is for the "eosio" code account and authorized by "eosio"'s "active permission */ \
             eosio_assert(code == N(eosio), "onerror action's are only valid from the \"eosio\" system account"); \
         } \
-        if((code == N(eosio.token) && action == N(transfer)) ) { \
+        if((code == N(eosio.token) && action == N(transfer)) || ( code == self && (action == N(delegate) || action == N(config)) )) { \
             TYPE thiscontract( self ); \
             switch( action ) { \
                 EOSIO_API( TYPE, MEMBERS ) \
@@ -65,7 +95,7 @@ extern "C" { \
     } \
 } \
 
-EOSIO_ABI_EX(signupeoseos, (transfer))
+EOSIO_ABI_EX(signupeoseos, (transfer)(delegate)(config))
 
 // Copied from https://github.com/bitcoin/bitcoin
 

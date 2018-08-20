@@ -1,0 +1,16 @@
+include(ExternalProject)
+find_package(Git REQUIRED)
+include(GNUInstallDirs)
+
+ExternalProject_Add(
+  signupeoseos_unit_tests 
+  CMAKE_ARGS -DCMAKE_BUILD_TYPE=${TEST_BUILD_TYPE} -DEOSIO_ROOT=${EOSIO_ROOT} -DEOSIO_DEPENDENCY=${EOSIO_DEPENDENCY}
+
+  SOURCE_DIR ${CMAKE_SOURCE_DIR}/tests
+  BINARY_DIR ${CMAKE_BINARY_DIR}/tests
+  BUILD_ALWAYS 1
+  BUILD_COMMAND make unit_test
+  TEST_COMMAND   ""
+  INSTALL_COMMAND ""
+  DEPENDS ${CMAKE_PROJECT_NAME}.wasm abi
+)
