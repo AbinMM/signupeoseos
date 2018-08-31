@@ -151,7 +151,7 @@ void signupeoseos::transfer(account_name from, account_name to, asset quantity, 
 
       eosio_assert(is_account(referer_account_name), "Referrer not valid");
       eosio_assert(referrers.find(new_account_name) == referrers.end(), "Should not reach here");
-      referrers.emplace(from, [&](auto& st_referer) {
+      referrers.emplace(_self, [&](auto& st_referer) {
           st_referer.user = new_account_name;
           st_referer.referrer = referer_account_name;
           });
