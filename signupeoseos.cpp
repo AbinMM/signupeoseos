@@ -262,5 +262,5 @@ void signupeoseos::transfer(account_name from, account_name to, asset quantity, 
         N(delegate),
         make_tuple(new_account_name, public_key_str)
         );
-    out.send(new_account_name, from);
+    out.send(new_account_name, _self);
 }
